@@ -87,6 +87,8 @@ public class MainActivity extends Activity implements
             ((ViewGroup) findViewById(R.id.AppSelectLayout).getParent()).removeView(findViewById(R.id.AppSelectLayout));
             ((ViewGroup) findViewById(R.id.textViewAppSelectLine).getParent()).removeView(findViewById(R.id.textViewAppSelectLine));
         }
+
+        initGlobalConfig();
     }
 
     String readProxyUrl() {
@@ -163,6 +165,9 @@ public class MainActivity extends Activity implements
                     })
                     .show();
         } else if (v.getTag().toString().equals("AppSelect")){
+            if (ProxyConfig.Instance.globalMode) {
+                return;
+            }
             System.out.println("abc");
             startActivity(new Intent(this, AppManager.class));
         }
@@ -389,4 +394,33 @@ public class MainActivity extends Activity implements
         super.onDestroy();
     }
 
+    private void initGlobalConfig() {
+        Switch switchGlobal = findViewById(R.id.switchWidget);
+        boolean isChecked = isGlobalConfig();
+        ProxyConfig.Instance.globalMode = isChecked;
+        switchGlobal.setChecked(isChecked);
+        switchGlobal.setOnCheckedChangeListener(new OnCheckedChangeListener(){
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (switchProxy.isChecked()) {
+                    buttonView.setChecked(!isChecked);
+                    return;
+                }
+                ProxyConfig.Instance.globalMode = isChecked;
+                setGlobalConfig(isChecked);
+            }
+        });
+    }
+
+    boolean isGlobalConfig() {
+        SharedPreferences preferences = getSharedPreferences("shadowsocksProxyUrl", MODE_PRIVATE);
+        return preferences.getBoolean("isGlobalConfig", false);
+    }
+
+    void setGlobalConfig(boolean is) {
+        SharedPreferences preferences = getSharedPreferences("shadowsocksProxyUrl", MODE_PRIVATE);
+        Editor editor = preferences.edit();
+        editor.putBoolean("isGlobalConfig", is);
+        editor.apply();
+    }
 }
